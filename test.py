@@ -1,12 +1,20 @@
-# -*- coding: utf-8 -*-
+@app.route("/login")
+def login():
 
-# example code snippet py_vuln00: Arbitrary Code Execution:
-compute_user_input = input('\nType something here to compute: ')
-if not compute_user_input:
-        print ("No input")
-else:
-        print ("Result: ", eval(compute_user_input))
+  username = request.values.get('username')
+  password = request.values.get('password')
 
-# 2*2
-# __import__("os").system("ls")
-# __import__('os').system('rm –rf /')
+  # Prepare database connection
+  db = pymysql.connect("localhost")
+  cursor = db.cursor()
+
+  # Execute the vulnerable SQL query concatenating user-provided input.
+  cursor.execute("SELECT * FROM users WHERE username = '%s' AND password = '%s'" % (username, password))
+
+  # If the query returns any matching record, consider the current user logged in.
+  record = cursor.fetchone()
+  if record:
+    session['logged_user'] = username
+
+  # disconnect from server
+  db.close()
